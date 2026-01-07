@@ -1,3 +1,4 @@
+
 #include <unistd.h>
 
 /* sottofunzione: ft_strlen,calcola la lunghezza di una stringa fino a quando non arriva a \0 escluso.*/

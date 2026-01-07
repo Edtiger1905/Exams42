@@ -1,0 +1,37 @@
+DIFFERENZE TRA STRCSPN,STRSPN,STRPBRK:
+
+1. STRPBRK trova il primo carattere valido della seconda 
+stringa nella prima
+
+es:
+
+strpbrk("ciao mondo", "aeiou"); 
+
+ritorna il puntatore alla alla lettera "i" della prima stringa
+
+2. STRCSPN conta quanti caratteri sono validi della seconda 
+stringa nella prima
+
+es:
+
+strspn("123abc", "0123456789")
+
+ritorna il numero dei caratteri della seconda stringa che si
+trovano nella prima.
+Nel nostro caso ritorna "3",perche' arriva fino al terzo carattere
+prima che non si abbiano piu' corrispondenze tra la seconda e la
+prima stringa
+
+
+3. STRCSPN conta quanti caratteri ci sono fino al primo carattere 
+proibito della seconda stringa
+
+es:
+
+strcpsn("ciao;mondo", ";,")
+
+ritorna nel nostro caso 4,cioe' fino a quando non trova il primo
+carattere proibito,nel nostro caso ";"
+ritorna "4" perche' e' dove la stringa si ferma trovato il carattere
+proibito
+
