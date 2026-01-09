@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Calcola il risultato dell'operazione richiesta tra due interi, 
+/* sub: Calcola il risultato dell'operazione richiesta tra due interi, 
  * gestendo moltiplicazione, divisione, modulo, somma e sottrazione 
  * tramite il carattere operatore passato come parametro. */
 int do_op(int a,char op,int b) //prende come input due interi e un carattere operatore
