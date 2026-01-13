@@ -12,9 +12,12 @@ int main(int ac,char const *av[])
     if(ac == 2)
     {
         i = 0;
-        /* 2. salta spazi  */
+        /* 2. Salta spazi fino alla prima parola */
         while(av[1][i] == ' ' || av[1][i] == '\t')
             i++;
+        /* 3. Cuore della funzione: scorre la stringa fino al null terminator,controlla se ci sono spazi o tabs.
+        Se ci sono imposta flag a 1. Il secondo ciclo effettivamente e' il cuore della funzione, quando non ci sono spazi
+        o tabs e flag = 1, mette 3 spazi,stampando il carattere comunque.*/
         while(av[1][i])
         {
             if(av[1][i] == ' ' || av[1][i] == '\t')
