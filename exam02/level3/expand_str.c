@@ -5,11 +5,14 @@ senza spazi o tabs tra di loro.  */
 #include <unistd.h>
 int main(int ac,char const *av[])
 {
+    /* 1. dichiarazione delle variabili e check iniziali:
+    dichiara i e flag e fa check sugli argomenti. */
     int i;
     int flag;
     if(ac == 2)
     {
         i = 0;
+        /* 2. salta spazi  */
         while(av[1][i] == ' ' || av[1][i] == '\t')
             i++;
         while(av[1][i])
