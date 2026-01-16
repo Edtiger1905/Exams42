@@ -1,47 +1,48 @@
 /* sub: scrivi un programma che prende
 una o piu' stringhe e per ogni argomento
-scrive l'ultima lettera della parola in
+scrive la prima lettera della parola in
 maiuscolo,scrivendo il resto della parola
 in minuscolo. */
-#include <unistd.h>
 
-/* 1. funzione di supporto: funziona da mente
+/* 1. funzione di supporto: funziona da mente 
 del programma,fa tutte le conversioni necessarie.*/
-void rstr_capitalizer(char *str)
+void str_capitalizer(char *str)
 {
     int i;
 
     i = 0;
     /* 2. quanto la funzione non e' al null terminator, 
-    fa i check sulle lettere,se la lettera e' maiuscola
-    la fa diventare minuscola in codice ascii (+32),
+    fa i check sulle lettere,se la lettera e' minuscola
+    la fa diventare maiuscola in codice ascii (-32),
     senno' se il carattere dopo della stringa e' uno spazio
-    (ascii 9-13) o una lettera minuscola,
-    la converte in maiuscola(-32) */
-    while(str[i])
+    (ascii 9-13) o una lettera maiuscola,
+    la converte in minuscola(+32) */
+    if(str[i] >= 'a' && str[i] <= 'z')
+        str[i] -= 32;
+    write(1, &str[i], 1);
+    while(str[++i])
     {
         if(str[i] >= 'A' && str[i] <= 'Z')
             str[i] += 32;
-        if(str[i] >= 'a' && str[i] <= 'z' && str[i + 1] == '\0' 
-                || str[i + 1] == ' ' || (str[i + 1] >= 9 && str[i + 1] <= 13))
+        if((str[i] >= 'a' && str[i] <= 'z') && (str[i - 1] == ' ' ||
+        str[i - 1] == '\t'))
             str[i] -= 32;
-        write(1, &str[i++], 1);
+        write(1, &str[i], 1);
     }
 }
 /* 3. funzione principale: fa check sugli
 argomenti e richiama la funzione di supporto 
 che si occupa dei calcoli.*/
-int main(int ac, char **av)
+int main(int ac, char *av[])
 {
     int i;
 
-    if (ac > 1)
+    if(ac > 1)
     {
         i = 1;
         while(i < ac)
         {
-            rstr_capitalizer(av[i]);
-            write(1, "\n", 1);
+            str_capitalizer(av[i]);
             i += 1;
         }
     }
