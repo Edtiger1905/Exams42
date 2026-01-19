@@ -11,7 +11,7 @@ int get_digit(char c, int digits_in_base)
     if(digits_in_base <= 10)
         max_digit = digits_in_base + '0';
     else
-    max_digit = digits_in_base - 10 + 'a';
+        max_digit = digits_in_base - 10 + 'a';
 
     if(c >= '0' && c <= '9' && c<= max_digit)
         return (c - '0');
