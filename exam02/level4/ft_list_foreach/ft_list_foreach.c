@@ -14,7 +14,9 @@ void ft_list_foreach(t_list *begin_list, void (*f)(void *))
     t_list *list_ptr;
 
     list_ptr = begin_list;
-    /* 3. fino a quando non finisce la lista,passa al prossimo elemento quando converte 
+    /* 3. fino a quando non finisce la lista,
+    passa al prossimo elemento applicandolo
+    con la funzione data.
      */
     while (list_ptr)
     {

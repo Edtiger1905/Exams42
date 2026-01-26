@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
-/* 1. scopo
+/* 1. scopo:
 
-replica strpbrk: trova il primo carattere di s1 
+replica strpbrk,cioe' trova il primo carattere di s1 
 che appartiene all'insieme di caratteri s2
 */
 

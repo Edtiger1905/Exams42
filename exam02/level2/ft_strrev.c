@@ -23,7 +23,7 @@ char *ft_strrev(char *str)
 	i = ft_strlen(str);
 	j = 0;
 	/* 2. loop che va avanti fino a quando j e' piu' piccolo di i - 1, e rigira la stringa nella medesima 
-	 * grazie alla variabile temporanea.*/
+	* grazie alla variabile temporanea.*/
 	while(j < i - 1)
 	{
 		temp = str[j];
