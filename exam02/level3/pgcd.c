@@ -16,14 +16,13 @@ int main(int ac, char const *av[])
     int n2;
 
     /* 2. conversione input: converte gli argomenti
-    da stringa a intero */
-    n1 = atoi(av[1]);
-    n2 = atoi(av[2]);
-    /* 3. controllo argomenti: il programma 
+    da stringa a intero e controllo argomenti: il programma 
     funziona solo con due numeri positivi passati 
     come argomenti */
     if(ac == 3)
     {
+	n1 = atoi(av[1]);
+	n2 = atoi(av[2]);
         if(n1 > 0 && n2 > 0)
         {
             /* 4. algoritmo di  Euclide(per sottrazione): 
@@ -42,4 +41,5 @@ int main(int ac, char const *av[])
     }
     printf("\n");
     return (0);
+
 }

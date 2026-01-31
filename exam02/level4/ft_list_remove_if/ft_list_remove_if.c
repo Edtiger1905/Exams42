@@ -1,5 +1,5 @@
 /* sub: scrivi una funzione chiata ft_list_remove_if 
-che rimuove dalla lista passata ogni elemento i cui dati
+he rimuove dalla lista passata ogni elemento i cui dati
 sono uguali ai dati di riferimento.  */
 
 #include <stdlib.h>
