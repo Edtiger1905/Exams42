@@ -175,7 +175,30 @@ static int scan_string(FILE *f, va_list ap)
     return (1);
 }
 /* Blocco 5: ft_vfscanf 
-
+E' il parser della stringa di formato. Scorre format carattere per carattere e decide
+cosa fare. 
+Flusso: 
+I. Si inizializzano le variabili: nconv per contare le conversioni riuscite,
+c per leggere caratteri, ret per salvare i valori di ritorno delle funzioni scan_*.
+II. Si inizializza nconv = 0.
+III. Legge un carattere dal file per controllare subito se e' EOF. Se lo e',ritorna EOF
+immediatamente. Altrimenti lo rimette indietro con ungetc perche' non doveva ancora essere
+consumato.
+IV. Entra nel while principale e scorre la stringa di formato carattere per carattere.
+V. Caso 1 -> Conversione (%): Se trova %, avanza di una posizione con format++ e controlla 
+quale tipo di conversione e' richiesto:
+- Se e' %d o %s, chiama prima skip_space per saltare gli spazi iniziali dall'input.
+- Chiama la funzione scan_* appropriata e salva il risultato in ret.
+- Se ret != 1 (matching fallito o errore), esce dal loop con break.
+- Se invece ret == 1, incrementa nconv perche' la conversione e' riuscita.
+VI. Caso 2 -> Spazio nel formato: se trova uno spazio (o tab,newline,ecc ...) nel formato,
+chiama skip_space per consumare tutti gli spazi dall'input.
+VII. Caso 3 -> Carattere letterale: se trova qualsiasi altro carattere, lo deve matchare 
+esattamente con l'input. Legge un carattere con fgetc, lo confronta con *format, e se
+non corrisponde esce dal loop (dopo aver rimesso il carattere con ungetc se non era EOF).
+VIII. Alla fine di ogni iterazione, avanza nella stringa di formato con format++.
+IX. Quando esce dal loop, controlla ferror(f): se c'e' stato un errore ritorna EOF, 
+altrimenti ritorna nconv (il numero di conversoni riuscite).
 */
 
 int ft_vfscanf(FILE *f, const char *format, va_list ap)
@@ -196,7 +219,58 @@ int ft_vfscanf(FILE *f, const char *format, va_list ap)
             format++;
             if(*format == 'd' || *format == 's')
                 skip_space(f);
-            else if()
+            if(*format == 'c')
+                ret = scan_char(f, ap);
+            else if(*format == 'd')
+                ret = scan_int(f, ap);
+            else if(*format == 's')
+                ret = scan_string(f, ap);
+            else
+                break;
+            if(ret != 1)
+                break;
+            nconv++;
         }
+        else if(isspace(*format))
+            skip_space(f);
+        else
+        {
+            c = fgetc(f);
+            if(c != *format)
+            {
+                if(c != EOF)
+                    ungetc(c, f);
+                break;
+            }
+        }
+        format++;
     }
+    if(ferror(f))
+        return (EOF);
+    else
+        return (nconv);
+}
+/* Blocco 6: ft_scanf
+E' il punto d'ingresso pubblico. Raccoglie gli argomenti variadic con va_start,
+li passa a ft_vfscanf insieme a stdin, poi chiude la lista con va_end.
+Flusso:
+I. Dichiara ap per la lista degli argomenti variadic e ret per il valore di ritorno.
+II. Inizializza la lista variadica con va_start(ap, format). Questo dice al sistema
+"gli argomenti variadic iniziano dopo il parametro format".
+III. Chiama ft_vfscanf passando stdin come file da cui leggere, la stringa di formato,
+e la lista di argometi. Salva il risultato in ret.
+IV. Chiude la lista variadica con va_end(ap). Questo libera le risorse interne 
+usate da va_list.
+V. Ritorna ret, che contiene il numero di conversioni riuscite (o EOF in caso di errore).
+*/
+
+int ft_scanf(const char *format, ...)
+{
+    va_list ap;
+    int ret;
+
+    va_start(ap, format);
+    ret = ft_vfscanf(stdin, format, ap);
+    va_end(ap);
+    return (ret);
 }
