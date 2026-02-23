@@ -1,3 +1,4 @@
+
 /* sub: Scrivi una funzione chiamata ft_scanf che simula il 
 comportamento della vera funzione scanf con le seguenti restrizioni:
 - Gestisce solo i formati %d, %s e %c
@@ -68,7 +69,22 @@ static int scan_char(FILE *f, va_list ap)
     return 1;
 }
 /* Blocco 3: scan_int
-
+Flusso:
+I. Si dichiarano tute le variabili in cima: c per i caratteri letti,sign per il 
+segno (+1 o -1), value per costruire il numero, digits per contare quante cifre sono state 
+lette, dest per il puntatore da riempire.
+II. Si inizializzano sign = 1, value = 0; digits = 0.
+III. Legge il primo carattere per controllare se e' + o -. Se e' -,imposta sign = -1,
+altrimenti lascia sign = 1. Se non e' un segno,lo rimette dentro con ungetc.
+IV. Entra nel while e legge cifra per cifra,costruendo il valore con la formula classica
+value = value * 10 + (c - '0'). Sottrarre '0' converte il carattere ASCII nella cifra 
+numerica corrispondente. Ogni cifra letta incrementa digits.
+V. Quando trova un carattere che non e' una cifra, esce dal loop. Se quel carattere non e'
+EOF, lo rimette indietro perche' appartiene al token successivo.
+VI. Controlla se c'e' stato un errore con ferror(f) o se non ha letto nessuna 
+cifra (digits == 0). In questi casi ritorna -1 per errore o 0 per matching fallito.
+VII. Estrae il puntatore dest dalla va_list e ci scrive il risultato finale value * sign.
+VIII. Ritorna 1 per indicare successo.
 */
 static int scan_int(FILE *f, va_list ap)
 {
@@ -82,4 +98,105 @@ static int scan_int(FILE *f, va_list ap)
     value = 0;
     digits = 0;
     c = fgetc(f);
+    if(c == EOF)
+    {
+        if(ferror(f))
+            return(-1);
+        else
+            return(0);
+    }
+    if(c == '+' || c == '-')
+    {
+        if(c == '-')
+            sign = -1;
+    }
+    else
+        ungetc(c, f);
+    while(isdigit(c = fgetc(f)))
+    {
+        value = value * 10 + (c - '0');
+        digits++;
+    }
+    if(c != EOF)
+        ungetc(c, f);
+    if(ferror(f) || !digits)
+    {
+        if(ferror(f))
+            return (-1);
+        else
+            return (0);
+    }
+    dest = va_arg(ap, int *);
+    *dest = value * sign;
+    return (1);
+}
+
+/* Blocco 4: scan_string 
+Flusso:
+I. Si dichiarano tutte le variabili in cima: c per il carattere letto,n per contare i
+caratteri,s per il puntatore al buffer
+II. Si inizializza n = 0.
+III. Estrae subito il puntatore destinazione s dalla va_list prima di iniziare la lettura.
+IV. Entra nel while e legge carattere per carattere finche' non trova uno spazio o EOF.
+Ogni carattee viene scritto nel buffer con *s = (char)c, poi il puntatore avanza con s++
+e il contatore n viene incrementato.
+V. Lo spazio (o il carattere non-spazio) che ha fermato il loop viene rimesso indietro con
+ungetc,come per scan_int,perche' appartiene al token successivo.
+VI. Controlla se c'e' stato un errore con ferror(f) o se non ha letto nulla (n == 0). 
+In questi casi ritorna -1 per errore o 0 per matching fallito.
+VII. Aggiunge il terminatore '\0' alla fine,rendendo il buffer una stringa C valida.
+VIII. Ritorna 1 per indicare successo.
+*/
+
+static int scan_string(FILE *f, va_list ap)
+{
+    int c;
+    int n;
+    char *s;
+
+    n = 0;
+    s = va_arg(ap, char *);
+    while((c = fgetc(f)) != EOF && !isspace(c))
+    {
+        *s = (char)c;
+        s++;
+        n++;
+    }
+    if(c != EOF)
+        ugetc(c, f);
+    if(ferror(f) || !n)
+    {
+        if(ferror(f))
+            return (-1);
+        else
+            return (0);
+    }
+    *s = '\0';
+    return (1);
+}
+/* Blocco 5: ft_vfscanf 
+
+*/
+
+int ft_vfscanf(FILE *f, const char *format, va_list ap)
+{
+    int nconv;
+    int c;
+    int ret;
+
+    nconv = 0;
+    c = fgetc(f);
+    if(c == EOF)
+        return (EOF);
+    ungetc(c, f);
+    while(*format)
+    {
+        if(format == '%')
+        {
+            format++;
+            if(*format == 'd' || *format == 's')
+                skip_space(f);
+            else if()
+        }
+    }
 }
