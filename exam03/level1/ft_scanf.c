@@ -10,9 +10,9 @@ comportamento della vera funzione scanf con le seguenti restrizioni:
 
 /* Blocco 0: librerie
 stdarg.h -> fornisce gli strumenti per gestire le funzioni 
-con argomenti variabili: va_list, va_start, va_arg e va_end
+con argomenti variadici: va_list, va_start, va_arg e va_end
 stdio.h -> fornisce FILe, fgetc, ungetc, ferror e stdin
-ctype.h -> fornisce isspace e isdigit
+ctype.h -> fornisce isspace e isdigit.
 */
 #include <stdarg.h>
 #include <stdio.h>
