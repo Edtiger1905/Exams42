@@ -83,13 +83,22 @@ in cui e' posizionata la regina nella colonna i.
 Flusso:
 I. Caso base -> tutte le colonne sono riempite:
 - Se column == n significa che abbiamo piazzato con successo N regine (una per ogni colonna).
-- Stampa la soluzione trovata: scorre l'array board e stampa la riga di ogni regina, separata da spazi.
+- Stampa la soluzione trovata: scorre l'array board e stampa la riga di ogni regina, 
+separata da spazi.
 - Ritorna per permettere al backtracking di continuare a trovare altre soluzioni.
 II. Caso ricorsivo -> prova tutte le righe possibili:
 "for (int row = 0; row < n; row++)"
 - Prova a piazzare una regina in ogni riga della colonna corrente.
 - Per ogni riga row:
-1. Controlla 
+1. Controlla se la posizione e' valida chiamando check_ori e check_diag.
+2. Se entrambe ritornano 1 (nessun conflitto):
+- Piazza la regina: board[column] = row
+- Chiama ricorsivamente fill_square per la colonna successiva:
+fill_square(board, n, column + 1)
+3. Quando la ricorsione ritorna (backtracking), prova la prossima riga.
+extra: Il backtracking implicito -> quando fill_square ritorna dalla ricorsione,board[column]
+viene automaticamente sovrascritto dalla prossima iterazione del for,quindi non serve 
+"ripulire" esplicitamente la posizione.
 */
 
 void fill_square(int board[], int n, int column)
@@ -117,4 +126,26 @@ void fill_square(int board[], int n, int column)
             fill_square(board, n, column + 1);
         }
     }
+}
+/* Blocco 4: main -> Punto di ingresso del programma. Gestisce gli argomenti dalla linea di
+comando e avvia la risoluzione.
+Flusso:
+1. Controlla che ci siano esattamente 2 argomenti (nome programma + numero) e che il 
+numero sia positivo.
+2. Converte l'argomento stringa in intero con atoi(av[1]) e lo salva in n. 
+3. Dichiara un array board[n] di dimensione variabile (VLA -> variable length array).
+4. Chiama fill_square(board, n, 0) per iniziare la ricerca delle soluzioni partendo 
+dalla colonna 0.
+5. Stampa una newline finale.
+*/
+
+int main(int ac, char **av)
+{
+    if(ac == 2 & atoi(av[1]) > 0)
+    {
+        int n = atoi(av[1]);
+        int board[n];
+        fill_square(board, n, 0);
+    }
+    fprintf(stdout, "\n");
 }
