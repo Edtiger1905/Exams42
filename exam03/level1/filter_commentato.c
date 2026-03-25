@@ -1,118 +1,82 @@
-/* sub: Scrivi un programma che prende in input un solo argomento.
-Il programma deve leggere da stdin e scrivere tutto il contenuto
-letto in stdout ad eccezione del fatto che ogni occorrenza di 
-s(la stringa in input da av) deve essere rimpiazzato da un '*'
-*/
+/* Sub: scrivi un programma che legge dallo standard input e sostituisce tutte le occorrenze
+di una stringa data (passata come argomento) con asterischi ('*'), poi scrive il risultato
+sullo standard output. Se il numero di argomenti non è 1, ritorna. */
 
-/* Blocco 0: librerie e costanti.
-unistd.h: per read e write
-stdlib.h: per malloc e free
-string.h: per strlen
-stdio.h: per perror
-MAX_INPUT_BUFFER_SIZE: dimensione massima del buffer di input,
-10000 caratteri + 1 per il terminatore di stringa.   
+/* Blocco 0: Librerie
+- unistd.h -> fornisce read e write
+- string.h -> fornisce strlen
+- stdlib.h -> fornisce malloc e free
 */
 #include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <stdlib.h>
 
-#define MAX_INPUT_BUFFER_SIZE 10001
+/* Blocco 1: ft_strjoin -> Concatena la stringa s1 con il primo carattere di s2, libera s1
+e ritorna la nuova stringa allocata.
 
-/* Blocco 1: Funzioni ft_strncmp
-Confronta i primi n carattere delle due stringe:
-- Se sono uguali, ritorna 1
-- Se sono diverse, ritorna 0
-Serve per controllare se,in una certa posizione del testo, c'e'
-la parola da censurare.
+Flusso:
+1. Dichiara i e lo inizializza a 0.
+2. Alloca memoria per una nuova stringa: strlen(s1) + 2 byte (lunghezza di s1 +
+1 carattere da s2 + terminatore \0).
+3. Controlla se malloc e' riuscita. Se fallisce,ritorna NULL immediatamente.
+4. Copia tutti i caratteri di s1 nella nuova stringa usando un while:
+    - Copia s1[i] in str[i].
+    - Incrementa i.
+5. Aggiunge il primo carattere di s2 alla fine: str[i] = s2[0].
+6. Aggiunge il terminatore: str[i + 1] = '\0'.
+7. Libera la memoria di s1 con free(s1) perche' non serve piu' (viene sostituita 
+dalla nuova stringa).
+8. Ritorna il puntatore alla nuova stringa.
 */
-int ft_strncmp(char *s1, char *s2, int n)
+char *ft_strjoin(char *s1,char *s2)
 {
-    int i;
+    int i = 0;
+    char *str = malloc(strlen(s1) + 2);
 
-    i = 0;
-    while(i < n && s1[i] == s2[i])
+    if(!str)
+        return (NULL);
+    while(s1[i])
+    {
+        str[i] = s1[i];
         i++;
-    return (i == n);
+    }
+    str[i] = s2[0];
+    str[i + 1] = '\0';
+    free(s1);
+    return (str);
 }
-/* Blocco 2: Inizio main, variabili e controllo argomenti.
-buffer: contiene il testo letto da stdin
-c: carattere temporaneo per la lettura
-r: numero di byte letti da read
-i: indice per scorrere il buffer
-len: lunghezza della stringa da censurare (av[1]) 
-Il check verifica che ci sia un solo argomento, che non sia vuoto
-e che non sia null.
+
+/* Blocco 2: main -> Punto di ingresso del programma. Legge l'input, cerca il pattern e lo 
+sostituisce con asterischi.
+Flusso:
+1. 
 */
 int main(int ac, char **av)
 {
-    char *buffer;
-    char c;
-    ssize_t r;
-    int i;
-    int len;
+    int i = 0, j, len;
+    char *str, buf[1];
 
-    i = 0;
-    if(ac != 2 || !av[1] || !*av[1])
+    if(ac != 2)
         return (1);
-
-/* Blocco 3: lunghezza stringa e allocazione memoria
-I. Calcola la lunghezza della stringa da censurare.
-II. Alloca la memoria per il buffer.
-III. Se malloc fallisce stampa errore e termina.
-*/
-
-len = strlen(av[1]);
-buffer = malloc(MAX_INPUT_BUFFER_SIZE);
-if(!buffer)
-    return (perror("Error"), 1);
-
-/* Blocco 4: Lettura da stdin.
-Legge l'input un carattere alla volta finche' non arriva a EOF o
-finche' il buffer non e' pieno.
-*/
-while((r = read(STDIN_FILENO, &c, 1)) > 0
-    && i < MAX_INPUT_BUFFER_SIZE - 1)
-    buffer[i++] = c;
-
-/* Blocco 5: Gestione errore di lettura 
-Se read ritorna -1: c'e' un errore, stampa il messaggio, libera la 
-memoria e termina.
-*/
-
-if(r == -1)
-    return (perror("Error"), free(buffer), 1);
-
-/* Blocco 6: Terminazione stringa
-Aggiunge il terminatore \0 per prendere il buffer una stringa valida 
-*/
-
-buffer[i] = '\0';
-
-/* Blocco 7: Ciclo di elaborazione output 
-Scorre tutto il buffer carattere per carattere e controllo se nella
-posizione corrente c'e' la stringa da censurare.
-*/
-i = 0;
-while(buffer[i])
-{
-    if(i + len <= strlen(buffer) &&
-        ft_strncmp(&buffer[i], av[1], len))
-    
-    /* Blocco 8: Caso stringa trovata.
-    Se trova la stringa stampa len asterischi e avanza di len
-    caratteri
-    */
-    for(int j = 0; j < len; j++)
-        write(STDOUT_FILENO, "*", 1);
-    i += len;
-    /* Blocco 9: Caso stringa non trovata.
-    Stampa il carattere originale e passa al successivo      
-    */
-    write(STDOUT_FILENO, &buffer[i++], 1);
-    /* Blocco 10: Fine programma.
-    Libera la memoria e termina correttamente. */
-    free(buffer);
+    str = malloc(1);
+    str[0] = '\0';
+    len = strlen(av[1]);
+    while(read(0, buf, 1));
+        str = ft_strjoin(str, buf);
+    while(str[i])
+    {
+        j = 0;
+        while(str[i + j] && av[1][j] && str[i + j] == av[1][j])
+            j++;
+        if(j == len)
+        {
+            while(j-- > 0)
+                str[i++] = '*';
+        }
+        else
+            i++;
+    }
+    write(1, str, strlen(str));
+    free(str);
     return (0);
-}
 }
