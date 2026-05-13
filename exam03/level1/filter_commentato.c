@@ -61,7 +61,7 @@ int main(int ac, char **av)
     str = malloc(1);
     str[0] = '\0';
     len = strlen(av[1]);
-    while(read(0, buf, 1));
+    while(read(0, buf, 1))
         str = ft_strjoin(str, buf);
     while(str[i])
     {
