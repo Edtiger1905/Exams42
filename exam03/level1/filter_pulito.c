@@ -1,50 +1,107 @@
-#include <unistd.h>
+#define _GNU_SOURCE
+
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-char *strjoin(char *s1, char *s2)
+#ifndef BUFFER_SIZE
+# define BUFFER_SIZE 42
+#endif
+
+size_t ft_strlen(char *s)
+{
+    size_t i = 0;
+
+    if(!s)
+        return i;
+    while (s[i] != '\0')
+        i++;
+    return (i);
+}
+char *ft_strjoin(char *s1, char *s2)
+{
+    size_t size1 = ft_strlen(s1);
+    size_t size2 = ft_strlen(s2);
+
+    char *tmp = malloc(size1 + size2 + 1);
+
+    if(!tmp)
+        return (NULL);
+
+    memmove(tmp, s1, size1);
+    memmove(&tmp[size1], s2, size2);
+
+    tmp[size1 + size2] = '\0';
+
+    return (tmp);
+
+}
+int ft_strncmp(char *s1,char *s2, size_t n)
 {
     int i = 0;
-    char *str = malloc(strlen(s1) + 2);
 
-    if(!str)
-        return (NULL);
-    while(s1[i])
+    while(s1[i] != '\0' && s2[i] != '\0' && i < n)
     {
-        str[i] = s1[i];
+        if(s1[i] != s2[i])
+            return (s1[i] - s2[i]);
         i++;
     }
-    str[i] = s2[0];
-    str[i + 1] = '\0';
-    free(s1);
-    return (str);
+    return (0);
 }
-int main(int ac, char **av)
-{
-    int i = 0, j, len;
-    char *str, buf[1];
 
-    if(ac != 2)
-        return (1);
-    str = malloc(1);
-    str[0] = '\0';
-    len = strlen(av[1]);
-    while(read(0, buf, 1))
-        str = strjoin(str, buf);
-    while(str[i])
+void filter(char *s1, char *s2)
+{
+    int i = 0;
+    size_t size2 = ft_strlen(s2);
+
+    while(s1[i] != '\0')
     {
-        j = 0;
-        while(str[i + j] && av[1][j] && str[i + j] == av[1][j])
-            j++;
-        if(j == len)
+        if(ft_strncmp(&s1[i], s2, size2) == 0)
         {
-            while(j-- > 0)
-                str[i++] = '*';
+            int j = 0;
+
+            while(j < size2)
+            {
+                write(1, "*", 1);
+                i++;
+                j++;
+            }
         }
         else
+        {
+            write(1, &s1[i], 1);
             i++;
+        }
     }
-    write(1, str, strlen(str));
-    free(str);
-    return(0);
+}
+
+int main(int ac, char **av)
+{
+    ssize_t bytes = 0;
+
+    char *r = NULL;
+    char *tmp = NULL;
+    char *s = av[1];
+    char buf[BUFFER_SIZE + 1] = "";
+
+    if(ac != 2 || !s)
+        return (1);
+
+    while((bytes = read(0, buf, BUFFER_SIZE)) > 0)
+    {
+        buf[BUFFER_SIZE] = '\0';
+        tmp = ft_strjoin(r, buf);
+        free(r);
+        r = tmp;
+    }
+    
+    if(bytes < 0)
+        return (free(r), 1);
+    
+        if(!r)
+        return (0);
+    
+        filter(r, s);
+
+    return (free(r), 0);
 }

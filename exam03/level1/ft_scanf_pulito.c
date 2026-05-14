@@ -6,12 +6,11 @@ static void skip_space(FILE *f)
 {
     int c;
     while((c = fgetc(f)) != EOF && isspace(c))
-    {
-        if(c != EOF)
-            ungetc(c, f);
-
-    }
+        ;
+    if(c != EOF)
+        ungetc(c, f);
 }
+
 static int scan_char(FILE *f, va_list ap)
 {
     int c;
@@ -29,6 +28,7 @@ static int scan_char(FILE *f, va_list ap)
     *dest = (char)c;
     return 1;
 }
+
 static int scan_int(FILE *f, va_list ap)
 {
     int c;
@@ -44,9 +44,9 @@ static int scan_int(FILE *f, va_list ap)
     if(c == EOF)
     {
         if(ferror(f))
-            return(-1);
+            return (-1);
         else
-            return(0);
+            return (0);
     }
     if(c == '+' || c == '-')
     {
@@ -73,6 +73,7 @@ static int scan_int(FILE *f, va_list ap)
     *dest = value * sign;
     return (1);
 }
+
 static int scan_string(FILE *f, va_list ap)
 {
     int c;
@@ -88,7 +89,7 @@ static int scan_string(FILE *f, va_list ap)
         n++;
     }
     if(c != EOF)
-        ugetc(c, f);
+        ungetc(c, f);
     if(ferror(f) || !n)
     {
         if(ferror(f))
@@ -99,6 +100,7 @@ static int scan_string(FILE *f, va_list ap)
     *s = '\0';
     return (1);
 }
+
 int ft_vfscanf(FILE *f, const char *format, va_list ap)
 {
     int nconv;
@@ -112,7 +114,7 @@ int ft_vfscanf(FILE *f, const char *format, va_list ap)
     ungetc(c, f);
     while(*format)
     {
-        if(format == '%')
+        if(*format == '%')
         {
             format++;
             if(*format == 'd' || *format == 's')
@@ -148,6 +150,7 @@ int ft_vfscanf(FILE *f, const char *format, va_list ap)
     else
         return (nconv);
 }
+
 int ft_scanf(const char *format, ...)
 {
     va_list ap;

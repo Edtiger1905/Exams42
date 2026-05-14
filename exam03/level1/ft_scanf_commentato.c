@@ -1,276 +1,350 @@
 
-/* sub: Scrivi una funzione chiamata ft_scanf che simula il 
-comportamento della vera funzione scanf con le seguenti restrizioni:
-- Gestisce solo i formati %d, %s e %c
-- Non gestisce le opzioni m e '
-- Non gestisce i campi di larghezza
-- Non gestisce i caratteri modificatori di tipo (h, hh, l, ecc...)
-- Non gestisce le conversioni che iniziano con %n$
+/* sub: Implementazione di una funzione ft_scanf che emula il comportamento della scanf standard,
+con supporto limitato ai conversion specifier c, d e s.
+La funzione deve leggere da stdin e gestire solo i formati specificati, senza supporto per
+opzioni avanzate come *, m, ', field width, o modifier di tipo (h, hh, l, ecc.).
 */
 
-/* Blocco 0: librerie
-stdarg.h -> fornisce gli strumenti per gestire le funzioni 
-con argomenti variadici: va_list, va_start, va_arg e va_end
-stdio.h -> fornisce FILe, fgetc, ungetc, ferror e stdin
-ctype.h -> fornisce isspace e isdigit.
+/* Blocco 0: Librerie
+- stdarg.h -> fornisce funzioni per gestire argomenti variabili (va_list, va_start, va_arg, va_end)
+- stdio.h -> fornisce funzioni per I/O (fgetc, ungetc, ferror)
+- ctype.h -> fornisce funzioni per la classificazione dei caratteri (isspace)
 */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 
-/* Blocco 1: skip_space
-Consuma tutti i caratteri (spazi, tabulazioni, ecc...) dal file 
-finche' non trova qualcosa di non-spazio. Quel carattere non-spazio
-viene rimesso indietro nel buffer con ungetcp perche' appartiene al
-token successivo e non va perso.
-Va chiamata prima di leggere un intero %d o una stringa %s, perche'
-scanf standard ignora gli spazi iniziali per questi due tipi.
+/* Blocco 1: match_space -> Salta tutti gli spazi bianchi nel file.
+Come funziona:
+- Legge caratteri dal file finche' non trova un carattere non bianco o EOF.
+- Se trova un carattere non bianco, lo rimette nel buffer con ungetc.
+- Restituisce 0 se la lettura e' avvenuta con successo, -1 in caso di errore.
 */
-static void skip_space(FILE *f)
+int match_space(FILE *f)
 {
     int c;
-    while((c = fgetc(f)) != EOF && isspace(c))
-    {
-        if(c != EOF)
-            ungetc(c, f);
-
-    }
-}
-/* Blocco 2: scan_char
-- Legge esattamente un carattere dal file e lo scrive nel puntatore
-passato tramite va_list
-- Se c'e' EOF si entra nell'if e si controlla ferror per capire il
-motivo: se c'e' stato un errore di I/O ritorna -1, se invece e' solo
-finito il file ritorna 0.
-- va_arg(ap, char *) -> estrae il prossimo argomento dalla lista 
-variadica e lo salva in dest, che e' il puntatore al char passato da
-chi ha chiamato ft_scanf.
-- *dest = (char)c -> deferenzia il puntatore e ci scrive dentro il 
-carattere letto, convertendolo da int a char.
-- %c non salta gli spazi, quindi non chiama skip_space. Questo e' un 
-comportamento fedele a scanf
-- Ritorna 1 se la lettura ha avuto successo.
-*/
-static int scan_char(FILE *f, va_list ap)
-{
-    int c;
-    char *dest;
-
-    c = fgetc(f);
-    if(c == EOF)
-    {
-        if(ferror(f))
-            return -1;
-        else
-            return 0;
-    }
-    dest = va_arg(ap, char *);
-    *dest = (char)c;
-    return 1;
-}
-/* Blocco 3: scan_int
-Flusso:
-I. Si dichiarano tute le variabili in cima: c per i caratteri letti,sign per il 
-segno (+1 o -1), value per costruire il numero, digits per contare quante cifre sono state 
-lette, dest per il puntatore da riempire.
-II. Si inizializzano sign = 1, value = 0; digits = 0.
-III. Legge il primo carattere per controllare se e' + o -. Se e' -,imposta sign = -1,
-altrimenti lascia sign = 1. Se non e' un segno,lo rimette dentro con ungetc.
-IV. Entra nel while e legge cifra per cifra,costruendo il valore con la formula classica
-value = value * 10 + (c - '0'). Sottrarre '0' converte il carattere ASCII nella cifra 
-numerica corrispondente. Ogni cifra letta incrementa digits.
-V. Quando trova un carattere che non e' una cifra, esce dal loop. Se quel carattere non e'
-EOF, lo rimette indietro perche' appartiene al token successivo.
-VI. Controlla se c'e' stato un errore con ferror(f) o se non ha letto nessuna 
-cifra (digits == 0). In questi casi ritorna -1 per errore o 0 per matching fallito.
-VII. Estrae il puntatore dest dalla va_list e ci scrive il risultato finale value * sign.
-VIII. Ritorna 1 per indicare successo.
-*/
-static int scan_int(FILE *f, va_list ap)
-{
-    int c;
-    int sign;
-    int value;
-    int digits;
-    int *dest;
-
-    sign = 1;
-    value = 0;
-    digits = 0;
-    c = fgetc(f);
-    if(c == EOF)
-    {
-        if(ferror(f))
-            return(-1);
-        else
-            return(0);
-    }
-    if(c == '+' || c == '-')
-    {
-        if(c == '-')
-            sign = -1;
-    }
-    else
+    while ((c = fgetc(f)) != EOF && isspace(c))
+        ;
+    if (c != EOF)
         ungetc(c, f);
-    while(isdigit(c = fgetc(f)))
+    return (0);
+}
+
+/* Blocco 2: match_char -> Confronta un carattere letto dal file con un carattere atteso.
+Come funziona:
+- Legge un carattere dal file.
+- Se il carattere letto non corrisponde a quello atteso, lo rimette nel buffer con ungetc.
+- Restituisce 1 se il carattere corrisponde, 0 altrimenti.
+*/
+int match_char(FILE *f, char c)
+{
+    int read_c = fgetc(f);
+    if (read_c != c)
     {
-        value = value * 10 + (c - '0');
-        digits++;
+        if (read_c != EOF)
+            ungetc(read_c, f);
+        return (0);
     }
-    if(c != EOF)
-        ungetc(c, f);
-    if(ferror(f) || !digits)
+    return (1);
+}
+
+/* Blocco 3: scan_char -> Legge un singolo carattere dal file e lo salva nella posizione puntata da dest.
+Come funziona:
+- Legge un carattere dal file.
+- Se incontra EOF, restituisce 0 (nessun carattere letto) o -1 (errore).
+- Salva il carattere in *dest (puntatore ottenuto da va_arg).
+- Restituisce 1 se la lettura e' avvenuta con successo.
+*/
+int scan_char(FILE *f, va_list ap)
+{
+    int c = fgetc(f);
+    if (c == EOF)
     {
-        if(ferror(f))
+        if (ferror(f))
             return (-1);
         else
             return (0);
     }
-    dest = va_arg(ap, int *);
+    char *dest = va_arg(ap, char *);
+    *dest = (char)c;
+    return (1);
+}
+
+/* Blocco 4: scan_int -> Legge un intero dal file e lo salva nella posizione puntata da dest.
+Come funziona:
+- Salta eventuali spazi bianchi iniziali (gestito da match_space nella ft_vfscanf).
+- Legge un carattere per controllare il segno (+ o -).
+- Legge cifre numeriche finche' non trova un carattere non numerico.
+- Costruisce il valore intero moltiplicando per 10 e aggiungendo la cifra corrente.
+- Se non ci sono cifre o c'e' un errore, restituisce 0 o -1.
+- Salva il valore in *dest (puntatore ottenuto da va_arg).
+- Restituisce 1 se la lettura e' avvenuta con successo.
+*/
+int scan_int(FILE *f, va_list ap)
+{
+    int c;
+    int sign = 1;
+    int value = 0;
+    int digits = 0;
+
+    c = fgetc(f);
+    if (c == '+')
+        c = fgetc(f);
+    else if (c == '-')
+    {
+        sign = -1;
+        c = fgetc(f);
+    }
+
+    while (isdigit(c))
+    {
+        value = value * 10 + (c - '0');
+        digits++;
+        c = fgetc(f);
+    }
+
+    if (c != EOF)
+        ungetc(c, f);
+
+    if (ferror(f) || !digits)
+    {
+        if (ferror(f))
+            return (-1);
+        else
+            return (0);
+    }
+
+    int *dest = va_arg(ap, int *);
     *dest = value * sign;
     return (1);
 }
 
-/* Blocco 4: scan_string 
-Flusso:
-I. Si dichiarano tutte le variabili in cima: c per il carattere letto,n per contare i
-caratteri,s per il puntatore al buffer
-II. Si inizializza n = 0.
-III. Estrae subito il puntatore destinazione s dalla va_list prima di iniziare la lettura.
-IV. Entra nel while e legge carattere per carattere finche' non trova uno spazio o EOF.
-Ogni carattee viene scritto nel buffer con *s = (char)c, poi il puntatore avanza con s++
-e il contatore n viene incrementato.
-V. Lo spazio (o il carattere non-spazio) che ha fermato il loop viene rimesso indietro con
-ungetc,come per scan_int,perche' appartiene al token successivo.
-VI. Controlla se c'e' stato un errore con ferror(f) o se non ha letto nulla (n == 0). 
-In questi casi ritorna -1 per errore o 0 per matching fallito.
-VII. Aggiunge il terminatore '\0' alla fine,rendendo il buffer una stringa C valida.
-VIII. Ritorna 1 per indicare successo.
+/* Blocco 5: scan_string -> Legge una stringa dal file e la salva nella posizione puntata da dest.
+Come funziona:
+- Salta eventuali spazi bianchi iniziali (gestito da match_space nella ft_vfscanf).
+- Legge caratteri finche' non trova uno spazio bianco o EOF.
+- Salva ogni carattere in *s (puntatore ottenuto da va_arg) e incrementa s.
+- Aggiunge il terminatore di stringa '\0' alla fine.
+- Se non ci sono caratteri o c'e' un errore, restituisce 0 o -1.
+- Restituisce 1 se la lettura e' avvenuta con successo.
 */
-
-static int scan_string(FILE *f, va_list ap)
+int scan_string(FILE *f, va_list ap)
 {
     int c;
-    int n;
-    char *s;
+    int n = 0;
+    char *s = va_arg(ap, char *);
 
-    n = 0;
-    s = va_arg(ap, char *);
-    while((c = fgetc(f)) != EOF && !isspace(c))
+    while ((c = fgetc(f)) != EOF && !isspace(c))
     {
         *s = (char)c;
         s++;
         n++;
     }
-    if(c != EOF)
-        ugetc(c, f);
-    if(ferror(f) || !n)
+
+    if (c != EOF)
+        ungetc(c, f);
+
+    if (ferror(f) || !n)
     {
-        if(ferror(f))
+        if (ferror(f))
             return (-1);
         else
             return (0);
     }
+
     *s = '\0';
     return (1);
 }
-/* Blocco 5: ft_vfscanf 
-E' il parser della stringa di formato. Scorre format carattere per carattere e decide
-cosa fare. 
-Flusso: 
-I. Si inizializzano le variabili: nconv per contare le conversioni riuscite,
-c per leggere caratteri, ret per salvare i valori di ritorno delle funzioni scan_*.
-II. Si inizializza nconv = 0.
-III. Legge un carattere dal file per controllare subito se e' EOF. Se lo e',ritorna EOF
-immediatamente. Altrimenti lo rimette indietro con ungetc perche' non doveva ancora essere
-consumato.
-IV. Entra nel while principale e scorre la stringa di formato carattere per carattere.
-V. Caso 1 -> Conversione (%): Se trova %, avanza di una posizione con format++ e controlla 
-quale tipo di conversione e' richiesto:
-- Se e' %d o %s, chiama prima skip_space per saltare gli spazi iniziali dall'input.
-- Chiama la funzione scan_* appropriata e salva il risultato in ret.
-- Se ret != 1 (matching fallito o errore), esce dal loop con break.
-- Se invece ret == 1, incrementa nconv perche' la conversione e' riuscita.
-VI. Caso 2 -> Spazio nel formato: se trova uno spazio (o tab,newline,ecc ...) nel formato,
-chiama skip_space per consumare tutti gli spazi dall'input.
-VII. Caso 3 -> Carattere letterale: se trova qualsiasi altro carattere, lo deve matchare 
-esattamente con l'input. Legge un carattere con fgetc, lo confronta con *format, e se
-non corrisponde esce dal loop (dopo aver rimesso il carattere con ungetc se non era EOF).
-VIII. Alla fine di ogni iterazione, avanza nella stringa di formato con format++.
-IX. Quando esce dal loop, controlla ferror(f): se c'e' stato un errore ritorna EOF, 
-altrimenti ritorna nconv (il numero di conversoni riuscite).
-*/
 
+/* Blocco 6: match_conv -> Gestisce i conversion specifier (%c, %d, %s).
+Come funziona:
+- Riceve un puntatore al formato e un puntatore al file.
+- In base al carattere successivo a '%', chiama la funzione appropriata:
+  - %c: scan_char
+  - %d: scan_int (dopo aver saltato gli spazi con match_space)
+  - %s: scan_string (dopo aver saltato gli spazi con match_space)
+- Restituisce il risultato della funzione chiamata o -1 se il formato non e' supportato.
+*/
+int match_conv(FILE *f, const char **format, va_list ap)
+{
+    switch (**format)
+    {
+        case 'c':
+            return scan_char(f, ap);
+        case 'd':
+            match_space(f);
+            return scan_int(f, ap);
+        case 's':
+            match_space(f);
+            return scan_string(f, ap);
+        case EOF:
+            return -1;
+        default:
+            return -1;
+    }
+}
+
+/* Blocco 7: ft_vfscanf -> Funzione principale che gestisce la lettura formattata.
+Come funziona:
+- Inizializza il conteggio delle conversioni (nconv) a 0.
+- Legge un carattere per controllare se il file e' vuoto o in errore.
+- Scorre il formato finche' non trova il terminatore.
+- Se incontra '%', chiama match_conv per gestire il conversion specifier.
+  - Se match_conv restituisce 1, incrementa nconv.
+  - Altrimenti, interrompe il ciclo.
+- Se incontra uno spazio nel formato, chiama match_space per saltare gli spazi nel file.
+- Se incontra un carattere letterale, chiama match_char per confrontarlo.
+- Restituisce EOF se c'e' un errore, altrimenti restituisce nconv.
+*/
 int ft_vfscanf(FILE *f, const char *format, va_list ap)
 {
-    int nconv;
-    int c;
-    int ret;
+    int nconv = 0;
 
-    nconv = 0;
-    c = fgetc(f);
-    if(c == EOF)
-        return (EOF);
+    int c = fgetc(f);
+    if (c == EOF)
+        return EOF;
     ungetc(c, f);
-    while(*format)
+
+    while (*format)
     {
-        if(format == '%')
+        if (*format == '%')
         {
             format++;
-            if(*format == 'd' || *format == 's')
-                skip_space(f);
-            if(*format == 'c')
-                ret = scan_char(f, ap);
-            else if(*format == 'd')
-                ret = scan_int(f, ap);
-            else if(*format == 's')
-                ret = scan_string(f, ap);
+            if (match_conv(f, &format, ap) != 1)
+                break;
             else
-                break;
-            if(ret != 1)
-                break;
-            nconv++;
+                nconv++;
         }
-        else if(isspace(*format))
-            skip_space(f);
-        else
+        else if (isspace(*format))
         {
-            c = fgetc(f);
-            if(c != *format)
-            {
-                if(c != EOF)
-                    ungetc(c, f);
+            if (match_space(f) == -1)
                 break;
-            }
         }
+        else if (match_char(f, *format) != 1)
+            break;
         format++;
     }
-    if(ferror(f))
-        return (EOF);
-    else
-        return (nconv);
-}
-/* Blocco 6: ft_scanf
-E' il punto d'ingresso pubblico. Raccoglie gli argomenti variadic con va_start,
-li passa a ft_vfscanf insieme a stdin, poi chiude la lista con va_end.
-Flusso:
-I. Dichiara ap per la lista degli argomenti variadic e ret per il valore di ritorno.
-II. Inizializza la lista variadica con va_start(ap, format). Questo dice al sistema
-"gli argomenti variadic iniziano dopo il parametro format".
-III. Chiama ft_vfscanf passando stdin come file da cui leggere, la stringa di formato,
-e la lista di argometi. Salva il risultato in ret.
-IV. Chiude la lista variadica con va_end(ap). Questo libera le risorse interne 
-usate da va_list.
-V. Ritorna ret, che contiene il numero di conversioni riuscite (o EOF in caso di errore).
-*/
 
+    if (ferror(f))
+        return EOF;
+    return nconv;
+}
+
+/* Blocco 8: ft_scanf -> Wrapper per ft_vfscanf che gestisce gli argomenti variabili.
+Come funziona:
+- Inizializza la lista di argomenti variabili (va_list) con va_start.
+- Chiama ft_vfscanf con stdin come file e il formato fornito.
+- Chiude la lista di argomenti variabili con va_end.
+- Restituisce il risultato di ft_vfscanf.
+*/
 int ft_scanf(const char *format, ...)
 {
     va_list ap;
-    int ret;
-
     va_start(ap, format);
-    ret = ft_vfscanf(stdin, format, ap);
+    int ret = ft_vfscanf(stdin, format, ap);
     va_end(ap);
-    return (ret);
+    return ret;
 }
+
+/* Codice gia' implementato:
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <ctype.h>
+
+int match_space(FILE *f)
+{
+        // You may insert code here
+    return (0);
+}
+
+int match_char(FILE *f, char c)
+{
+        // You may insert code here
+    return (0);
+}
+
+int scan_char(FILE *f, va_list ap)
+{
+        // You may insert code here
+    return (0);
+}
+
+int scan_int(FILE *f, va_list ap)
+{
+        // You may insert code here
+    return (0);
+}
+
+int scan_string(FILE *f, va_list ap)
+{
+        // You may insert code here
+    return (0);
+}
+
+
+int	match_conv(FILE *f, const char **format, va_list ap)
+{
+	switch (**format)
+	{
+		case 'c':
+			return scan_char(f, ap);
+		case 'd':
+			match_space(f);
+			return scan_int(f, ap);
+		case 's':
+			match_space(f);
+			return scan_string(f, ap);
+		case EOF:
+			return -1;
+		default:
+			return -1;
+	}
+}
+
+int ft_vfscanf(FILE *f, const char *format, va_list ap)
+{
+	int nconv = 0;
+
+	int c = fgetc(f);
+	if (c == EOF)
+		return EOF;
+	ungetc(c, f);
+
+	while (*format)
+	{
+		if (*format == '%')
+		{
+			format++;
+			if (match_conv(f, &format, ap) != 1)
+				break;
+			else
+				nconv++;
+		}
+		else if (isspace(*format))
+		{
+			if (match_space(f) == -1)
+				break;
+		}
+		else if (match_char(f, *format) != 1)
+			break;
+		format++;
+	}
+	
+	if (ferror(f))
+		return EOF;
+	return nconv;
+}
+
+
+int ft_scanf(const char *format, ...)
+{
+	// ...
+	int ret = ft_vfscanf(stdin, format, ap);
+	// ...
+	return ret;
+}
+
+
+*/
